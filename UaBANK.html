@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>UA BANK | Boss v4.1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root { --ua-green: #00857a; }
+        body, html { height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; }
+        .bg-ocean { 
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1000');
+            background-size: cover; background-position: center; height: 100vh; width: 100%;
+        }
+        .screen { display: none; height: 100vh; width: 100%; position: absolute; top: 0; left: 0; overflow-y: auto; }
+        .active-screen { display: flex; flex-direction: column; }
+        .glass-card { background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); border-radius: 28px; }
+        .admin-card { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; margin-bottom: 10px; }
+        input { background: rgba(255, 255, 255, 0.1) !important; color: white !important; border: 1px solid rgba(255,255,255,0.2) !important; }
+    </style>
+</head>
+<body class="bg-ocean text-white">
+
+    <!-- GİRİŞ EKRANI -->
+    <div id="login-screen" class="screen active-screen justify-center px-10">
+        <div class="text-center mb-12">
+            <h1 class="text-5xl font-black italic tracking-tighter">UA BANK</h1>
+            <p class="text-white/40 text-[10px] mt-2 tracking-[0.4em] uppercase">Security System v4.1</p>
+        </div>
+        <div class="space-y-4 max-w-sm mx-auto w-full">
+            <input id="l-user" type="text" placeholder="Kullanıcı Adı" class="w-full p-5 rounded-2xl outline-none text-center font-bold">
+            <input id="l-pass" type="password" placeholder="Şifre" class="w-full p-5 rounded-2xl outline-none text-center font-bold">
+            <button onclick="login()" class="w-full bg-white text-[#00857a] font-black py-5 rounded-2xl shadow-2xl active:scale-95 transition uppercase tracking-widest">Sistemi Başlat</button>
+            <div class="flex justify-center text-[11px] px-2 opacity-50 font-bold uppercase mt-4">
+                <button onclick="adminLogin()">Boss Paneli</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ANA EKRAN -->
+    <div id="main-screen" class="screen">
+        <div class="p-6 flex justify-between items-center">
+            <i class="fa-solid fa-crown text-yellow-400 text-xl"></i>
+            <span class="font-black tracking-widest text-lg">UA BANK</span>
+            <div class="w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_green] animate-pulse"></div>
+        </div>
+        <div class="p-6 flex-1 flex flex-col justify-center">
+            <div class="glass-card p-10 flex flex-col items-center mb-6 text-center">
+                <p id="u-iban" class="text-[9px] opacity-40 tracking-[0.4em] mb-3 uppercase italic">UA-- ----</p>
+                <h3 class="text-[10px] font-bold opacity-60 uppercase mb-1">Toplam Bakiye</h3>
+                <h1 id="u-balance" class="text-5xl font-black tracking-tighter">0.00</h1>
+            </div>
+            
+            <div class="flex gap-4 mb-6">
+                <div class="glass-card flex-1 p-6 border-l-4 border-blue-500">
+                    <p class="text-[10px] font-bold opacity-50 mb-1 uppercase">Dolar</p>
+                    <div class="flex items-baseline gap-1">
+                        <p id="u-dolar" class="text-2xl font-black tracking-tight">0.00</p>
+                        <span class="text-xs font-bold text-blue-400">$</span>
+                    </div>
+                </div>
+                <div class="glass-card flex-1 p-6 border-l-4 border-yellow-500">
+                    <p class="text-[10px] font-bold opacity-50 mb-1 uppercase">Altın</p>
+                    <div class="flex items-baseline gap-1">
+                        <p id="u-altin" class="text-2xl font-black tracking-tight">0.00</p>
+                        <span class="text-xs font-bold text-yellow-500">gr</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <button onclick="openTransfer()" class="bg-white text-black rounded-2xl p-4 flex flex-col items-center"><i class="fa-solid fa-paper-plane mb-1 text-[#00857a]"></i><span class="text-[9px] font-black uppercase">Gönder</span></button>
+                <button onclick="showAction('invest-usd')" class="bg-white text-black rounded-2xl p-4 flex flex-col items-center"><i class="fa-solid fa-dollar-sign mb-1 text-blue-600"></i><span class="text-[9px] font-black uppercase">Dolar</span></button>
+                <button onclick="showAction('invest-gold')" class="bg-white text-black rounded-2xl p-4 flex flex-col items-center"><i class="fa-solid fa-coins mb-1 text-yellow-600"></i><span class="text-[9px] font-black uppercase">Altın</span></button>
+            </div>
+            <button onclick="location.reload()" class="mt-10 opacity-30 text-[10px] font-black uppercase tracking-[0.3em] text-center w-full">Güvenli Çıkış</button>
+        </div>
+    </div>
+
+    <!-- İŞLEM EKRANI -->
+    <div id="action-screen" class="screen bg-white text-zinc-900">
+        <div class="p-6 flex items-center border-b">
+            <button onclick="showScreen('main-screen')" class="mr-4 text-xl"><i class="fa-solid fa-arrow-left"></i></button>
+            <h2 id="action-title" class="font-black uppercase text-lg">İşlem</h2>
+        </div>
+        
+        <div id="invest-ui" class="p-8 space-y-6">
+            <div class="bg-zinc-100 p-8 rounded-[35px] text-center border">
+                <h2 id="rate-display" class="text-4xl font-black italic text-[#00857a]">--.-- UA</h2>
+            </div>
+            <input id="invest-amt" type="number" placeholder="Miktar" oninput="calculateTrade()" class="w-full !bg-zinc-50 !text-zinc-900 !border-zinc-200 p-6 rounded-2xl text-center text-3xl font-black outline-none">
+            <div id="calc-box" class="p-6 rounded-2xl hidden text-sm font-bold uppercase">
+                <div class="flex justify-between mb-1"><span>Tutar:</span> <span id="calc-cost">0 UA</span></div>
+                <div class="flex justify-between"><span>Kalan:</span> <span id="calc-rem">0 UA</span></div>
+            </div>
+            <div class="flex gap-4 pt-4">
+                <button onclick="processTrade('buy')" class="flex-1 bg-green-600 text-white py-5 rounded-2xl font-black uppercase">Al</button>
+                <button onclick="processTrade('sell')" class="flex-1 bg-zinc-900 text-white py-5 rounded-2xl font-black uppercase">Sat</button>
+            </div>
+        </div>
+
+        <div id="transfer-ui" class="p-8 space-y-4 hidden">
+            <input id="t-iban" type="text" placeholder="Alıcı IBAN (UA...)" class="w-full !bg-zinc-50 !text-zinc-900 !border-zinc-200 p-4 rounded-xl font-bold outline-none">
+            <input id="t-amt" type="number" placeholder="UA Tutarı" class="w-full !bg-zinc-50 !text-zinc-900 !border-zinc-200 p-4 rounded-xl text-2xl font-black outline-none">
+            <button onclick="processTransfer()" class="w-full bg-[#00857a] text-white py-5 rounded-xl font-black uppercase mt-4">Transferi Yap</button>
+        </div>
+    </div>
+
+    <!-- ADMIN PANEL -->
+    <div id="admin-screen" class="screen bg-zinc-950 p-6 text-white">
+        <div class="flex items-center justify-between mb-8 border-b border-white/10 pb-4">
+            <h2 class="text-2xl font-black text-[#00857a]">BOSS PANEL</h2>
+            <button onclick="showScreen('login-screen')" class="bg-red-600 px-4 py-1 rounded text-[10px] font-bold">KAPAT</button>
+        </div>
+        <div id="admin-user-list" class="space-y-4 pb-10"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, doc, getDoc, updateDoc, onSnapshot, collection, getDocs, query, where, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyD_awmtqbEZ3peDmM4MYw4GZPytcxMTnsQ",
+            authDomain: "uabank-21c3d.firebaseapp.com",
+            projectId: "uabank-21c3d",
+            appId: "1:715310727869:web:c66e7d9bd9c17c53136dd4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        let userData = null;
+        let rates = { usd: 34.20, gold: 3100 };
+        let activeAsset = 'dolar'; // firebase alan adı
+        let unsub = null;
+
+        async function fetchRates() {
+            try {
+                const res = await fetch('https://open.er-api.com/v6/latest/USD');
+                const data = await res.json();
+                rates.usd = data.rates.TRY;
+                rates.gold = (2600 / 31.1) * rates.usd;
+            } catch (e) { console.log("Kur hatası."); }
+        }
+        fetchRates();
+
+        window.showScreen = (id) => {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(id).classList.add('active-screen');
+        };
+
+        window.login = async () => {
+            const u = document.getElementById('l-user').value.toLowerCase().trim();
+            const p = document.getElementById('l-pass').value;
+            if(!u) return;
+
+            const userRef = doc(db, "users", u);
+            const snap = await getDoc(userRef);
+
+            if(snap.exists() && snap.data().sifre === p) {
+                if(unsub) unsub();
+                unsub = onSnapshot(userRef, (doc) => {
+                    if(!doc.exists()) return;
+                    const d = doc.data();
+                    userData = { id: u, ...d,
+                        bakiye: Number(d.bakiye || 0),
+                        dolar: Number(d.dolar || 0),
+                        altin: Number(d.altin || 0)
+                    };
+                    document.getElementById('u-balance').innerText = userData.bakiye.toLocaleString('tr-TR');
+                    document.getElementById('u-dolar').innerText = userData.dolar.toFixed(2);
+                    document.getElementById('u-altin').innerText = userData.altin.toFixed(2);
+                    document.getElementById('u-iban').innerText = d.iban || "YOK";
+                });
+                showScreen('main-screen');
+            } else { alert("Hata!"); }
+        };
+
+        window.showAction = (type) => {
+            document.getElementById('transfer-ui').classList.add('hidden');
+            document.getElementById('invest-ui').classList.remove('hidden');
+            activeAsset = type === 'invest-usd' ? 'dolar' : 'altin';
+            document.getElementById('action-title').innerText = activeAsset === 'dolar' ? "Dolar İşlemi" : "Altın İşlemi";
+            document.getElementById('rate-display').innerText = rates[activeAsset === 'dolar' ? 'usd' : 'gold'].toFixed(2) + " UA";
+            showScreen('action-screen');
+        };
+
+        window.calculateTrade = () => {
+            const amt = parseFloat(document.getElementById('invest-amt').value);
+            if(!amt || amt <= 0) return document.getElementById('calc-box').classList.add('hidden');
+            const cost = amt * rates[activeAsset === 'dolar' ? 'usd' : 'gold'];
+            document.getElementById('calc-cost').innerText = cost.toFixed(2) + " UA";
+            document.getElementById('calc-rem').innerText = (userData.bakiye - cost).toFixed(2) + " UA";
+            document.getElementById('calc-box').classList.remove('hidden');
+        };
+
+        window.processTrade = async (mode) => {
+            const amt = parseFloat(document.getElementById('invest-amt').value);
+            if(!amt || amt <= 0) return;
+            const rate = rates[activeAsset === 'dolar' ? 'usd' : 'gold'];
+            const cost = amt * rate;
+            const userRef = doc(db, "users", userData.id);
+
+            if(mode === 'buy') {
+                if(cost > userData.bakiye) return alert("Bakiye yetersiz patron!");
+                await updateDoc(userRef, {
+                    bakiye: Number(userData.bakiye - cost),
+                    [activeAsset]: Number(userData[activeAsset] + amt)
+                });
+            } else {
+                if(amt > userData[activeAsset]) return alert("Elde o kadar yok!");
+                await updateDoc(userRef, {
+                    bakiye: Number(userData.bakiye + cost),
+                    [activeAsset]: Number(userData[activeAsset] - amt)
+                });
+            }
+            alert("İşlem Başarılı!");
+            showScreen('main-screen');
+        };
+
+        window.openTransfer = () => {
+            document.getElementById('invest-ui').classList.add('hidden');
+            document.getElementById('transfer-ui').classList.remove('hidden');
+            document.getElementById('action-title').innerText = "Hızlı Transfer";
+            showScreen('action-screen');
+        };
+
+        window.processTransfer = async () => {
+            const iban = document.getElementById('t-iban').value.trim();
+            const amt = parseFloat(document.getElementById('t-amt').value);
+            if(!iban || isNaN(amt) || amt <= 0 || amt > userData.bakiye) return alert("Hatalı veri!");
+
+            const q = query(collection(db, "users"), where("iban", "==", iban));
+            const snap = await getDocs(q);
+            if(snap.empty) return alert("Alıcı bulunamadı!");
+
+            const target = snap.docs[0];
+            await updateDoc(doc(db, "users", userData.id), { bakiye: userData.bakiye - amt });
+            await updateDoc(doc(db, "users", target.id), { bakiye: Number(target.data().bakiye || 0) + amt });
+            alert("Transfer uçtu!");
+            showScreen('main-screen');
+        };
+
+        window.adminLogin = async () => {
+            if(prompt("BOSS Şifresi:") === "Türkrize53umut") {
+                showScreen('admin-screen');
+                refreshAdminList();
+            } else { alert("Yetkisiz!"); }
+        };
+
+        async function refreshAdminList() {
+            const list = document.getElementById('admin-user-list');
+            list.innerHTML = "";
+            const snap = await getDocs(collection(db, "users"));
+            snap.forEach(u => {
+                const d = u.data();
+                const div = document.createElement('div');
+                div.className = "admin-card";
+                div.innerHTML = `
+                    <div class="flex justify-between font-black text-[#00857a] mb-2">
+                        <span>${u.id.toUpperCase()}</span>
+                        <button onclick="deleteUser('${u.id}')" class="text-red-500 text-xs">SİL</button>
+                    </div>
+                    <div class="text-[10px] grid grid-cols-2 gap-1 opacity-80 mb-3">
+                        <p>Şifre: ${d.sifre}</p><p>IBAN: ${d.iban}</p>
+                        <p>Bakiye: ${d.bakiye} UA</p><p>Dolar: ${d.dolar || 0}</p><p>Altın: ${d.altin || 0}</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="editField('${u.id}', 'bakiye', 'Bakiye')" class="bg-white/10 px-2 py-1 rounded text-[9px]">BAKİYE</button>
+                        <button onclick="editField('${u.id}', 'sifre', 'Şifre')" class="bg-white/10 px-2 py-1 rounded text-[9px]">ŞİFRE</button>
+                        <button onclick="editField('${u.id}', 'dolar', 'Dolar')" class="bg-white/10 px-2 py-1 rounded text-[9px]">DOLAR</button>
+                        <button onclick="editField('${u.id}', 'altin', 'Altın')" class="bg-white/10 px-2 py-1 rounded text-[9px]">ALTIN</button>
+                        <button onclick="editField('${u.id}', 'iban', 'IBAN')" class="bg-white/10 px-2 py-1 rounded text-[9px]">IBAN</button>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        window.editField = async (id, field, label) => {
+            let val = prompt(label + " güncelle:");
+            if(val === null) return;
+            const updateObj = {};
+            updateObj[field] = (field === 'sifre' || field === 'iban') ? val : Number(val);
+            await updateDoc(doc(db, "users", id), updateObj);
+            refreshAdminList();
+        };
+
+        window.deleteUser = async (id) => {
+            if(confirm("Silinsin mi?")) {
+                await deleteDoc(doc(db, "users", id));
+                refreshAdminList();
+            }
+        };
+    </script>
+</body>
+</html>
